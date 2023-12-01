@@ -17,12 +17,14 @@
 #include "network/Manager.h"
 #include "utils/Dirs.h"
 #include "utils/Logger.h"
+#include "utils/QmlDesktopUtils.h"
 
 #include <QByteArray>
 #include <QObject>
 #include <QQuickItem>
 #include <QString>
 #include <QVariant>
+#include <qqml.h>
 
 static QDir s_qmlModulesDir( QString( CMAKE_INSTALL_FULL_DATADIR ) + "/qml" );
 
@@ -246,6 +248,14 @@ registerQmlModels()
             0,
             "Network",
             []( QQmlEngine*, QJSEngine* ) -> QObject* { return &CalamaresUtils::Network::Manager::instance(); } );
+
+
+        qmlRegisterSingletonType< CalamaresUtils::QmlDesktopUtils >( "org.manjaro.calamares.desktop",
+                                                                     1,
+                                                                     0,
+                                                                     "DesktopUtils",
+                                                                     []( QQmlEngine* e, QJSEngine* ) -> QObject*
+                                                                     { return new QmlDesktopUtils( e ); } );
     }
 }
 
