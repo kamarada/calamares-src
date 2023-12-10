@@ -70,18 +70,5 @@ Item {
             horizontalCenterOffset: -100
             verticalCenterOffset: -57
         }
-
     }
-
-    Loader {
-        source: "sponsor/SponsoredBy.qml"
-
-        anchors {
-            bottom: parent.bottom
-            right: parent.right
-            margins: 10
-        }
-
-    }
-
 }

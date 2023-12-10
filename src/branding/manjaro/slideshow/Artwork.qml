@@ -10,7 +10,6 @@ Rectangle {
         property int height: 6950
     }
 
-
     SystemPalette {
         id: systemPalette
     }
@@ -63,14 +62,14 @@ Rectangle {
                 properties: "x"
                 duration: 700
                 easing.type: Easing.OutQuad
-                to: comet.x-100
+                to: comet.x - 100
             }
             NumberAnimation {
                 target: comet
                 properties: "y"
                 duration: 700
                 easing.type: Easing.OutQuad
-                to: comet.y+100
+                to: comet.y + 100
             }
         }
     }
@@ -84,21 +83,19 @@ Rectangle {
             top: parent.top
             topMargin: -starsClose1.sourceSize.height
         }
-        height: starsClose1.height+starsClose2.height
+        height: starsClose1.height + starsClose2.height
 
         Image {
-            fillMode: Image.Tile
-
             id: starsClose1
+            fillMode: Image.Tile
             source: 'starsClose.svg'
 
             height: maxSceneSize.height
             width: maxSceneSize.width
         }
         Image {
-            fillMode: Image.Tile
-
             id: starsClose2
+            fillMode: Image.Tile
             source: 'starsClose.svg'
 
             height: maxSceneSize.height
@@ -126,20 +123,19 @@ Rectangle {
             top: parent.top
             topMargin: -starsFar1.sourceSize.height
         }
-        height: starsFar1.height+starsFar2.height
+        height: starsFar1.height + starsFar2.height
 
         Image {
-            fillMode: Image.Tile
             id: starsFar1
+            fillMode: Image.Tile
             source: 'starsFar.svg'
 
             height: maxSceneSize.height
             width: maxSceneSize.width
         }
         Image {
-            fillMode: Image.Tile
-
             id: starsFar2
+            fillMode: Image.Tile
             source: 'starsFar.svg'
 
             height: maxSceneSize.height
@@ -173,8 +169,7 @@ Rectangle {
             interval: 25000
             repeat: true
             onTriggered: {
-                moon.height = Math.floor(Math.random() * (45 - 200) + 200)
-
+                moon.height = Math.floor(Math.random() * (45 - 200) + 200);
                 moon.x = Math.floor(Math.random() * root.width);
                 moonShowupAnimation.start();
             }
@@ -185,9 +180,8 @@ Rectangle {
             properties: "y"
             duration: 25000
             from: -moon.height
-            to: maxSceneSize.height+moon.height
+            to: maxSceneSize.height + moon.height
         }
-
     }
 
     Image {
@@ -196,17 +190,22 @@ Rectangle {
 
         mipmap: true
         source: systemPalette.window.hslLightness > 0.5 ? "background.svg" : "background_dark.svg"
+    }
 
-        sourceSize {
-            height: maxSceneSize.height
-            width: maxSceneSize.width
+    Loader {
+        source: "sponsor/SponsoredBy.qml"
+
+        anchors {
+            bottom: parent.bottom
+            right: parent.right
+            margins: 10
         }
     }
 
     Item {
         id: smoke
 
-        anchors{
+        anchors {
             bottom: parent.bottom
             right: parent.right
             left: parent.left
@@ -214,7 +213,7 @@ Rectangle {
         height: smokeAsset.paintedHeight
 
         Rectangle {
-            anchors{
+            anchors {
                 bottom: parent.bottom
                 right: parent.right
                 left: parent.left
@@ -225,7 +224,7 @@ Rectangle {
         }
         Image {
             id: smokeAsset
-            anchors{
+            anchors {
                 bottom: parent.bottom
                 horizontalCenter: parent.horizontalCenter
             }
@@ -241,7 +240,7 @@ Rectangle {
 
         anchors {
             bottom: parent.bottom
-            bottomMargin: -(height-lift)
+            bottomMargin: -(height - lift)
             horizontalCenter: parent.horizontalCenter
             horizontalCenterOffset: -235
         }
@@ -286,17 +285,17 @@ Rectangle {
             name: "nearGround"
             PropertyChanges {
                 target: rocket
-                lift: root.height/2 + 150
+                lift: root.height / 2 + 150
             }
             PropertyChanges {
                 target: smoke
-                anchors.bottomMargin: -smoke.height/2 + 100
+                anchors.bottomMargin: -smoke.height / 2 + 100
             }
 
             PropertyChanges {
                 target: background
-                anchors.bottomMargin: -(root.height*0.2)
-                anchors.topMargin: -root.height+root.height*0.2
+                anchors.bottomMargin: -(root.height * 0.2)
+                anchors.topMargin: -root.height + root.height * 0.2
             }
         },
         State {
@@ -308,20 +307,20 @@ Rectangle {
             }
             PropertyChanges {
                 target: rocket
-                lift: root.height/2 + 100
+                lift: root.height / 2 + 100
             }
             PropertyChanges {
                 target: background
-                anchors.bottomMargin: -root.height*0.9
+                anchors.bottomMargin: -root.height * 0.9
                 anchors.topMargin: 0
             }
         },
         State {
             extend: "inAtmosphere"
-            name:  "inSpace"
+            name: "inSpace"
             PropertyChanges {
                 target: background
-                anchors.bottomMargin: -(root.height*2)
+                anchors.bottomMargin: -(root.height * 2)
                 anchors.topMargin: root.height
             }
             PropertyChanges {
@@ -344,7 +343,7 @@ Rectangle {
     ]
 
     transitions: [
-        Transition{
+        Transition {
             id: transition1
             from: "onGround"
             to: "nearGround"
@@ -355,14 +354,15 @@ Rectangle {
                     duration: 10000
                     easing.type: Easing.InQuad
                 }
-                ScriptAction { script: root.state = "inAtmosphere" }
+                ScriptAction {
+                    script: root.state = "inAtmosphere"
+                }
             }
             NumberAnimation {
                 target: smoke
                 property: "bottomMargin"
                 duration: 10000
                 easing.type: Easing.InQuad
-
             }
             NumberAnimation {
                 target: background
@@ -387,7 +387,9 @@ Rectangle {
                     properties: "anchors.topMargin,anchors.bottomMargin"
                     duration: 5000
                 }
-                ScriptAction { script: root.state = "inSpace" }
+                ScriptAction {
+                    script: root.state = "inSpace"
+                }
             }
         },
         Transition {
@@ -423,19 +425,22 @@ Rectangle {
         interval: 1
 
         onTriggered: {
-            switch(state) {
+            switch (state) {
             case "nearGround":
-                if(!transition1.running) return;
+                if (!transition1.running)
+                    return;
                 state = "onGround";
                 state = "nearGround";
                 break;
             case "inAtmosphere":
-                if(!transition2.running) return;
+                if (!transition2.running)
+                    return;
                 state = "nearGround";
                 state = "inAtmosphere";
                 break;
             case "inSpace":
-                if(!transition3.running) return;
+                if (!transition3.running)
+                    return;
                 state = "inAtmosphere";
                 state = "inSpace";
             }
@@ -445,5 +450,4 @@ Rectangle {
     onHeightChanged: {
         sizeChangeTimeout.restart();
     }
-
 }
