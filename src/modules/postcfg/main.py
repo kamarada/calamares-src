@@ -62,7 +62,7 @@ class ConfigController:
                     os.unlink(path)  
 
     def copy_file(self, file):
-        if exists("/" + file):
+        if exists("/" + file) and self.root != "/":
             copy2("/" + file, join(self.root, file))
 
     def copy_folder(self, source, target):
