@@ -773,7 +773,7 @@ class DMsddm(DisplayManager):
         elif sddm_config.has_option('Autologin', 'User'):
             sddm_config.remove_option('Autologin', 'User')
 
-        if default_desktop_environment is not None:
+        if do_autologin and default_desktop_environment is not None:
             sddm_config.set(
                 'Autologin',
                 'Session',
