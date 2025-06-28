@@ -765,7 +765,7 @@ class DMsddm(DisplayManager):
         if os.path.isfile(sddm_conf_path):
             sddm_config.read(sddm_conf_path)
 
-        if 'Autologin' not in sddm_config:
+        if do_autologin and 'Autologin' not in sddm_config:
             sddm_config.add_section('Autologin')
 
         if do_autologin:
