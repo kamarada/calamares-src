@@ -3,7 +3,7 @@
 #
 # === This file is part of Calamares - <http://github.com/calamares> ===
 #
-#   Copyright 2014 - 2024, Philip Müller <philm@manjaro.org>
+#   Copyright 2014 - 2025, Philip Müller <philm@manjaro.org>
 #   Copyright 2016, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
@@ -126,6 +126,11 @@ class ConfigController:
         if exists(join(self.root, "usr/bin/dd")):
             # Create temporary directory, copy /boot/vmlinuz-* to it, copy back with dd
             target_env_call(["sh", "-c", 'mkdir -p /tmp/vmlinuz-hack && mv /boot/vmlinuz-* /tmp/vmlinuz-hack/ && find /tmp/vmlinuz-hack/ -maxdepth 1 -type f -exec sh -c \'dd if="$1" of="/boot/$(basename "$1")"\' sh {} \;'])
+
+        # Enable KDE Initial System Setup when available
+        if exists(join(self.root, "usr/lib/libexec/kde-initial-system-setup-bootutil")):
+            target_env_call(["systemd-sysusers"])
+            target_env_call(["systemctl", "enable", "kde-initial-system-setup.service"])
 
         # Enable 'menu_auto_hide' when supported in grubenv
         if exists(join(self.root, "usr/bin/grub-set-bootflag")):
