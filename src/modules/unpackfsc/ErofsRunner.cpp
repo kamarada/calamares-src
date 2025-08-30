@@ -1,13 +1,13 @@
 /* === This file is part of Calamares - <https://calamares.io> ===
  *
- *   SPDX-FileCopyrightText: 2021 Adriaan de Groot <groot@kde.org>
+ *   SPDX-FileCopyrightText: 2025 Kel Modderman <kelvmod@gmail.com>
  *   SPDX-License-Identifier: GPL-3.0-or-later
  *
  *   Calamares is Free Software: see the License-Identifier above.
  *
  */
 
-#include "UnsquashRunner.h"
+#include "ErofsRunner.h"
 
 #include <utils/Logger.h>
 #include <utils/Runner.h>
@@ -16,23 +16,33 @@
 #include <QString>
 
 Calamares::JobResult
-UnsquashRunner::run()
+ErofsRunner::run()
 {
     if ( !checkSourceExists() )
     {
         return Calamares::JobResult::internalError(
-            tr( "Invalid unsquash configuration" ),
+            tr( "Invalid erofs configuration" ),
             tr( "The source archive <i>%1</i> does not exist." ).arg( m_source ),
             Calamares::JobResult::InvalidConfiguration );
     }
 
-    const QString toolName = QStringLiteral( "unsquashfs" );
-    QString unsquashExecutable;
-    if ( !checkToolExists( toolName, unsquashExecutable ) )
+    const QString dumpErofsToolName = QStringLiteral( "dump.erofs" );
+    QString dumpErofsExecutable;
+    if ( !checkToolExists( dumpErofsToolName, dumpErofsExecutable ) )
     {
         return Calamares::JobResult::internalError(
             tr( "Missing tools" ),
-            tr( "The <i>%1</i> tool is not installed on the system." ).arg( toolName ),
+            tr( "The <i>%1</i> tool is not installed on the system." ).arg( dumpErofsToolName ),
+            Calamares::JobResult::MissingRequirements );
+    }
+
+    const QString fsckErofsToolName = QStringLiteral( "fsck.erofs" );
+    QString fsckErofsExecutable;
+    if ( !checkToolExists( fsckErofsToolName, fsckErofsExecutable ) )
+    {
+        return Calamares::JobResult::internalError(
+            tr( "Missing tools" ),
+            tr( "The <i>%1</i> tool is not installed on the system." ).arg( fsckErofsToolName ),
             Calamares::JobResult::MissingRequirements );
     }
 
@@ -40,7 +50,7 @@ UnsquashRunner::run()
     if ( destinationPath.isEmpty() )
     {
         return Calamares::JobResult::internalError(
-            tr( "Invalid unsquash configuration" ),
+            tr( "Invalid erofs configuration" ),
             tr( "No destination could be found for <i>%1</i>." ).arg( m_destination ),
             Calamares::JobResult::InvalidConfiguration );
     }
@@ -48,13 +58,13 @@ UnsquashRunner::run()
     // Get the stats (number of inodes) from the FS
     {
         m_inodes = -1;
-        Calamares::Utils::Runner r( { unsquashExecutable, QStringLiteral( "-s" ), m_source } );
+        Calamares::Utils::Runner r( { dumpErofsExecutable, QStringLiteral( "-s" ), m_source } );
         r.setLocation( Calamares::Utils::RunLocation::RunInHost ).enableOutputProcessing();
         QObject::connect( &r,
                           &decltype( r )::output,
                           [ & ]( QString line )
                           {
-                              if ( line.startsWith( "Number of inodes " ) )
+                              if ( line.startsWith( "Filesystem inode count: " ) )
                               {
                                   m_inodes = line.split( ' ', SplitSkipEmptyParts ).last().toInt();
                               }
@@ -63,38 +73,37 @@ UnsquashRunner::run()
     }
     if ( m_inodes <= 0 )
     {
-        cWarning() << "No stats could be obtained from" << unsquashExecutable << "-s "
+        cWarning() << "No stats could be obtained from" << dumpErofsExecutable << "-s "
                    << m_source;
     }
 
     // Now do the actual unpack
     {
         m_linesProcessed = 0;
-        Calamares::Utils::Runner r( { unsquashExecutable,
-                                      QStringLiteral( "-i" ),  // List files
-                                      QStringLiteral( "-f" ),  // Force-overwrite
-                                      QStringLiteral( "-d" ),
-                                      destinationPath,
+        Calamares::Utils::Runner r( { fsckErofsExecutable,
+                                      QStringLiteral( "-d9" ),
+                                      QStringLiteral( "--force" ),
+                                      QStringLiteral( "--extract=%1" ).arg( destinationPath ),
                                       m_source } );
         r.setLocation( Calamares::Utils::RunLocation::RunInHost ).enableOutputProcessing();
-        connect( &r, &decltype( r )::output, this, &UnsquashRunner::unsquashProgress );
-        return r.run().explainProcess( toolName, std::chrono::seconds( 0 ) );
+        connect( &r, &decltype( r )::output, this, &ErofsRunner::erofsProgress );
+        return r.run().explainProcess( fsckErofsToolName, std::chrono::seconds( 0 ) );
     }
 }
 
 void
-UnsquashRunner::unsquashProgress( QString line )
+ErofsRunner::erofsProgress( QString line )
 {
     m_linesProcessed++;
     m_linesSinceLastUIUpdate++;
     if ( m_linesSinceLastUIUpdate > updateUIEveryNLines && line.contains( '/' ) )
     {
-        const QString filename = line.split( '/', SplitSkipEmptyParts ).last().trimmed();
-        if ( !filename.isEmpty() )
+        const QString pathname = line.split( '/', SplitSkipEmptyParts ).last().trimmed();
+        if ( !pathname.isEmpty() )
         {
             m_linesSinceLastUIUpdate = 0;
             double p = m_inodes > 0 ? ( double( m_linesProcessed ) / double( m_inodes ) ) : 0.5;
-            Q_EMIT progress( p, tr( "Unsquash file %1" ).arg( filename ) );
+            Q_EMIT progress( p, tr( "Erofs path %1" ).arg( pathname ) );
         }
     }
 }

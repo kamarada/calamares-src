@@ -1,21 +1,21 @@
 /* === This file is part of Calamares - <https://calamares.io> ===
  *
- *   SPDX-FileCopyrightText: 2021 Adriaan de Groot <groot@kde.org>
+ *   SPDX-FileCopyrightText: 2025 Kel Modderman <kelvmod@gmail.com>
  *   SPDX-License-Identifier: GPL-3.0-or-later
  *
  *   Calamares is Free Software: see the License-Identifier above.
  *
  */
 
-#ifndef UNPACKFSC_UNSQUASHRUNNER_H
-#define UNPACKFSC_UNSQUASHRUNNER_H
+#ifndef UNPACKFSC_EROFSRUNNER_H
+#define UNPACKFSC_EROFSRUNNER_H
 
 #include "Runners.h"
 
-/** @brief Use Unsquash for extracting a filesystem
+/** @brief Use erofs-utils for extracting a erofs filesystem
  *
  */
-class UnsquashRunner : public Runner
+class ErofsRunner : public Runner
 {
     Q_OBJECT
 public:
@@ -24,7 +24,7 @@ public:
     Calamares::JobResult run() override;
 
 protected Q_SLOTS:
-    void unsquashProgress( QString line );
+    void erofsProgress( QString line );
 
 private:
     int m_inodes = 0;  // Total in the FS
