@@ -1,16 +1,14 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=Install Manjaro Linux
-Name[da]=Installer Manjaro Linux
-GenericName=Live Installer
-GenericName[da]=Live-installationsprogram
+Name=Install
+Name[pt_BR]=Instalar
+GenericName=System Installer
+GenericName[pt_BR]=Instalador do Sistema
 Comment=Install the operating system to disk
-Comment[da]=Installer styresystemet på disk
-Comment[de]=Manjaro Linux installieren
+Comment[pt_BR]=Instala o sistema operacional no disco
 Exec=/usr/bin/calamares_polkit %f
 Icon=calamares
 Terminal=false
 StartupNotify=true
-Type=Application
 Categories=Qt;System;

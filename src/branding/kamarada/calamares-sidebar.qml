@@ -59,7 +59,7 @@ Rectangle {
                         if (index>ViewManager.currentStepIndex) {
                             return systemPalette.mid;
                         }
-                        return systemPalette.highlight
+                        return "#43a047"
                     }
                     z: 10
                 }
@@ -68,7 +68,7 @@ Rectangle {
                         if (index>ViewManager.currentStepIndex && index!=1) {
                             return systemPalette.mid;
                         }
-                        return systemPalette.highlight;
+                        return "#43a047";
 
                     }
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -80,7 +80,7 @@ Rectangle {
                 Rectangle {
                     color: {
                         if (index<ViewManager.currentStepIndex || ViewManager.currentStepIndex==list.count-1) {
-                            return systemPalette.highlight;
+                            return "#43a047";
                         }
                         return systemPalette.mid;
                     }
@@ -101,7 +101,7 @@ Rectangle {
 
                     ShapePath {
                         fillColor: "transparent"
-                        strokeColor: systemPalette.highlight
+                        strokeColor: "#43a047"
                         strokeWidth: 3
                         capStyle: ShapePath.FlatCap
 
@@ -122,24 +122,32 @@ Rectangle {
             Item {
                 Layout.fillWidth: true
             }
-            Shape {
+//            Shape {
+//                id: manjaroShape
+//                Layout.preferredHeight: 27
+//                Layout.preferredWidth: 27
+//
+//                ShapePath {
+//                    scale: Qt.size((manjaroShape.width-1)/200, (manjaroShape.height-1)/200)
+//
+//                    fillColor: systemPalette.highlight
+//                    strokeWidth: -1
+//                    PathSvg {
+//                        path: "M 14.28571,0 C 6.37556,0 0,6.375557 0,14.285714 V 185.71428 C 0,193.62444 6.37556,200 14.28571,200 H 57.14286 V 57.142856 h 71.42857 V 0 Z m 128.57144,0 v 200 h 42.85714 C 193.62445,200 200,193.62444 200,185.71428 V 14.285714 C 200,6.375557 193.62445,0 185.71429,0 Z M 71.42857,71.42857 V 200 h 57.14286 V 71.42857 Z m 0,0"
+//                    }
+//                }
+//            }
+            Image {
                 id: manjaroShape
                 Layout.preferredHeight: 27
                 Layout.preferredWidth: 27
-
-                ShapePath {
-                    scale: Qt.size((manjaroShape.width-1)/200, (manjaroShape.height-1)/200)
-
-                    fillColor: systemPalette.highlight
-                    strokeWidth: -1
-                    PathSvg {
-                        path: "M 14.28571,0 C 6.37556,0 0,6.375557 0,14.285714 V 185.71428 C 0,193.62444 6.37556,200 14.28571,200 H 57.14286 V 57.142856 h 71.42857 V 0 Z m 128.57144,0 v 200 h 42.85714 C 193.62445,200 200,193.62444 200,185.71428 V 14.285714 C 200,6.375557 193.62445,0 185.71429,0 Z M 71.42857,71.42857 V 200 h 57.14286 V 71.42857 Z m 0,0"
-                    }
-                }
+                source: "logo.png"
+                width: 200
+                height: 200
             }
 
             Label {
-                text: "manjaro"
+                text: "Kamarada"
                 font.pointSize: 16
                 font.family: "Comfortaa"
                 color: Branding.styleString(Branding.SidebarText)
@@ -150,7 +158,7 @@ Rectangle {
                 Layout.preferredWidth: 35
 
                 Rectangle {
-                    color: systemPalette.highlight
+                    color: "#43a047"
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     height: parent.height
@@ -168,7 +176,7 @@ Rectangle {
         Rectangle {
             color: {
                 if (ViewManager.currentStepIndex==list.count-1) {
-                    return systemPalette.highlight;
+                    return "#43a047";
                 }
                 return systemPalette.mid;
             }
