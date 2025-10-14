@@ -24,4 +24,3 @@ properties:
 
     efiBootloaderId:  { type: string }
     installEFIFallback: { type: boolean }
-    installHybridGRUB: { type: boolean }

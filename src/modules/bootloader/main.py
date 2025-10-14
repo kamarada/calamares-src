@@ -28,7 +28,7 @@ import subprocess
 
 import libcalamares
 
-from libcalamares.utils import check_target_env_call, check_target_env_output
+from libcalamares.utils import check_target_env_call
 
 import gettext
 
@@ -605,7 +605,7 @@ def run_grub_mkconfig(partitions, output_file):
         check_target_env_call([libcalamares.job.configuration["grubMkconfig"], "-o", output_file])
 
 
-def run_grub_install(fw_type, partitions, efi_directory, install_hybrid_grub):
+def run_grub_install(fw_type, partitions, efi_directory):
     """
     Runs grub-install in the target environment
 
@@ -637,52 +637,33 @@ def run_grub_install(fw_type, partitions, efi_directory, install_hybrid_grub):
                                    "--bootloader-id=" + efi_bootloader_id,
                                    "--force"])
     else:
-        if efi_directory is not None and not install_hybrid_grub:
-            libcalamares.utils.warning(_("Cannot install BIOS bootloader on UEFI installation when install_hybrid_grub is 'False'!"))
+        assert efi_directory is None
+        if libcalamares.globalstorage.value("bootLoader") is None:
             return
 
-        if libcalamares.globalstorage.value("bootLoader") is None:
-            efi_install_path = libcalamares.globalstorage.value("efiSystemPartition")
-            if efi_install_path is None or efi_install_path == "":
-                efi_install_path = "/boot/efi"
-            find_esp_disk_command = f"lsblk -o PKNAME \"$(df --output=source '{efi_install_path}' | tail -n1)\""
-            boot_loader_install_path = check_target_env_output(["sh", "-c", find_esp_disk_command]).strip()
-            if not "\n" in boot_loader_install_path:
-                libcalamares.utils.warning(_("Cannot find the drive containing the EFI system partition!"))
-                return
-            boot_loader_install_path = "/dev/" + boot_loader_install_path.split("\n")[1]
-        else:
-            boot_loader = libcalamares.globalstorage.value("bootLoader")
-            boot_loader_install_path = boot_loader["installPath"]
-            if boot_loader_install_path is None:
-                return
-            
-        # boot_loader_install_path points to the physical disk to install GRUB
-        # to. It should start with "/dev/", and be at least as long as the
-        # string "/dev/sda".
-        if not boot_loader_install_path.startswith("/dev/") or len(boot_loader_install_path) < 8:
-            raise ValueError(f"boot_loader_install_path contains unexpected value '{boot_loader_install_path}'")
+        boot_loader = libcalamares.globalstorage.value("bootLoader")
+        if boot_loader["installPath"] is None:
+            return
 
         if is_zfs:
             check_target_env_call(["sh", "-c", "ZPOOL_VDEV_NAME_PATH=1 "
                                    + libcalamares.job.configuration["grubInstall"]
                                    + " --target=i386-pc --recheck --force "
-                                   + boot_loader_install_path])
+                                   + boot_loader["installPath"]])
         else:
             check_target_env_call([libcalamares.job.configuration["grubInstall"],
                                    "--target=i386-pc",
                                    "--recheck",
                                    "--force",
-                                   boot_loader_install_path])
+                                   boot_loader["installPath"]])
 
 
-def install_grub(efi_directory, fw_type, install_hybrid_grub):
+def install_grub(efi_directory, fw_type):
     """
     Installs grub as bootloader, either in pc or efi mode.
 
     :param efi_directory:
     :param fw_type:
-    :param install_hybrid_grub:
     """
     # get the partition from global storage
     partitions = libcalamares.globalstorage.value("partitions")
@@ -690,12 +671,8 @@ def install_grub(efi_directory, fw_type, install_hybrid_grub):
         libcalamares.utils.warning(_("Failed to install grub, no partitions defined in global storage"))
         return
 
-    if fw_type != "bios" and fw_type != "efi":
-        raise ValueError("fw_type must be 'bios' or 'efi'")
-
-    if fw_type == "efi" or install_hybrid_grub:
+    if fw_type == "efi":
         libcalamares.utils.debug("Bootloader: grub (efi)")
-        libcalamares.utils.debug(f"install_hybrid_grub: {install_hybrid_grub}")
         installation_root_path = libcalamares.globalstorage.value("rootMountPoint")
         install_efi_directory = installation_root_path + efi_directory
 
@@ -706,7 +683,7 @@ def install_grub(efi_directory, fw_type, install_hybrid_grub):
 
         efi_target, efi_grub_file, efi_boot_file = get_grub_efi_parameters()
 
-        run_grub_install("efi", partitions, efi_directory, install_hybrid_grub)
+        run_grub_install(fw_type, partitions, efi_directory)
 
         # VFAT is weird, see issue CAL-385
         install_efi_directory_firmware = (vfat_correct_case(
@@ -735,9 +712,9 @@ def install_grub(efi_directory, fw_type, install_hybrid_grub):
             efi_file_target = os.path.join(install_efi_boot_directory, efi_boot_file)
 
             shutil.copy2(efi_file_source, efi_file_target)
-    if fw_type == "bios" or install_hybrid_grub:
+    else:
         libcalamares.utils.debug("Bootloader: grub (bios)")
-        run_grub_install("bios", partitions, efi_directory, install_hybrid_grub)
+        run_grub_install(fw_type, partitions, None)
 
     run_grub_mkconfig(partitions, libcalamares.job.configuration["grubCfg"])
 
@@ -867,7 +844,7 @@ def install_refind(efi_directory):
     update_refind_config(efi_directory, installation_root_path)
 
 
-def prepare_bootloader(fw_type, install_hybrid_grub):
+def prepare_bootloader(fw_type):
     """
     Prepares bootloader.
     Based on value 'efi_boot_loader', it either calls systemd-boot
@@ -891,8 +868,8 @@ def prepare_bootloader(fw_type, install_hybrid_grub):
         try:
             efi_boot_loader = libcalamares.job.configuration["efiBootLoader"]
         except KeyError:
-            if fw_type == "efi" or install_hybrid_grub:
-                libcalamares.utils.warning("Configuration missing both efiBootLoader and efiBootLoaderVar on an EFI-enabled  "
+            if fw_type == "efi":
+                libcalamares.utils.warning("Configuration missing both efiBootLoader and efiBootLoaderVar on an EFI "
                                            "system, bootloader not installed")
                 return
             else:
@@ -917,7 +894,7 @@ def prepare_bootloader(fw_type, install_hybrid_grub):
     elif efi_boot_loader == "refind" and fw_type == "efi":
         install_refind(efi_directory)
     elif efi_boot_loader == "grub" or fw_type != "efi":
-        install_grub(efi_directory, fw_type, install_hybrid_grub)
+        install_grub(efi_directory, fw_type)
     else:
         libcalamares.utils.debug("WARNING: the combination of "
                                  "boot-loader '{!s}' and firmware '{!s}' "
@@ -932,15 +909,8 @@ def run():
     """
 
     fw_type = libcalamares.globalstorage.value("firmwareType")
-    boot_loader = libcalamares.globalstorage.value("bootLoader")
 
-    install_hybrid_grub = libcalamares.job.configuration.get("installHybridGRUB", False)
-    efi_boot_loader = libcalamares.job.configuration.get("efiBootLoader", "")
-
-    if install_hybrid_grub == True and efi_boot_loader != "grub":
-        raise ValueError(f"efi_boot_loader '{efi_boot_loader}' is illegal when install_hybrid_grub is 'true'!")
-
-    if boot_loader is None and fw_type != "efi":
+    if libcalamares.globalstorage.value("bootLoader") is None and fw_type != "efi":
         libcalamares.utils.warning("Non-EFI system, and no bootloader is set.")
         return None
 
@@ -953,7 +923,7 @@ def run():
             return None
 
     try:
-        prepare_bootloader(fw_type, install_hybrid_grub)
+        prepare_bootloader(fw_type)
     except subprocess.CalledProcessError as e:
         libcalamares.utils.warning(str(e))
         libcalamares.utils.debug("stdout:" + str(e.stdout))
